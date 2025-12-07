@@ -2,7 +2,7 @@
 
 <i>Test it out:</i> https://grail-topia.com
 <br /><br />
-<i>For a description of all application services and there configurations, view that <a href="">here</a></i>
+<i>For a description of all application services and there configurations, view that <a href="https://github.com/phollenback/discogs-helper/blob/main/Services.md#services">here</a></i>
 
 Grailtopia is a production-grade, full-stack web application deployed on AWS EC2 and managed through a fully automated CI/CD pipeline using GitHub Actions. The system is containerized with Docker Compose and includes a React frontend, TypeScript/Express backend, and MySQL database running behind an Nginx reverse proxy with automatic HTTPS.
 <br /> <br /> 
