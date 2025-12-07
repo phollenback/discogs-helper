@@ -1,0 +1,159 @@
+.app-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Responsive adjustments for main container */
+main {
+    flex: 1;
+    overflow-x: hidden;
+}
+
+/* Mobile-friendly card adjustments */
+.card {
+    margin-bottom: 1rem;
+}
+
+/* Responsive gap utilities */
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .gap-2 {
+        gap: 0.375rem;
+    }
+    
+    .gap-3 {
+        gap: 0.75rem;
+    }
+}
+
+/* Mobile-friendly text wrapping */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Responsive padding utilities */
+.py-4 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .py-4 {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+}
+
+.px-4 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Ensure cards don't overflow on mobile */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.5rem;
+        margin-right: 0 !important;
+    }
+}
+
+/* Hide elements on mobile if needed */
+@media (max-width: 576px) {
+    .d-md-none.d-block-mobile {
+        display: block !important;
+    }
+    
+    .d-md-block.d-none-mobile {
+        display: none !important;
+    }
+}
+
+.users-directory {
+    background: #0f0f16;
+    min-height: calc(100vh - 120px);
+}
+
+.users-directory__card {
+    background: #1e1f2a;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1.25rem;
+    padding: 1.75rem 1.25rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 20px 40px rgba(12, 14, 32, 0.35);
+}
+
+.users-directory__card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.users-directory__avatar-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.users-directory__avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.users-directory__avatar--fallback {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #8a7bff, #ff8ed4);
+}
+
+.users-directory__controls .form-control,
+.users-directory__controls .form-select {
+    min-height: 48px;
+    border-radius: 999px;
+}
+
+.users-directory__suggestions {
+    background: #1b1c27;
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-image: radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 45%);
+}
+
+.suggestion-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    min-height: 180px;
+}

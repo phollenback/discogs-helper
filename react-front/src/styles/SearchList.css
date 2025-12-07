@@ -1,0 +1,112 @@
+/* Search List Styles */
+.search-result-item {
+    position: relative;
+}
+
+.search-card {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.search-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    border-color: #007bff !important;
+}
+
+.search-card img:hover {
+    transform: scale(1.05);
+}
+
+/* Compact card styles */
+.search-card-compact {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.search-card-compact:hover {
+    border-color: #007bff !important;
+}
+
+.search-card-compact .card-img-top {
+    transition: transform 0.2s ease;
+}
+
+.search-card-compact:hover .card-img-top {
+    transform: scale(1.03);
+}
+
+/* Button hover effects */
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Search form enhancements */
+.search-form .form-control {
+    border-radius: 25px;
+    padding: 12px 20px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.search-form .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.search-form .btn {
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Empty state styling */
+.text-center i.fa-search {
+    opacity: 0.3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .search-card {
+        margin-bottom: 15px;
+    }
+    
+    .search-card-compact .card-body {
+        padding: 0.5rem !important;
+    }
+}
+
+/* Extra small devices - show 2 cards per row */
+@media (max-width: 576px) {
+    .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+/* Loading state */
+.search-list.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animation for new results */
+.search-result-item {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+

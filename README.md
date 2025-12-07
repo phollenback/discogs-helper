@@ -1,6 +1,16 @@
 # Discogs Helper
 
-Web app for managing Discogs collections and wantlists.
+Web application for managing Discogs collections and wantlists with personalized recommendations.
 
-Built with React, Node.js, Express, and MySQL.
+## Tech Stack
 
+- React frontend
+- Node.js/Express backend  
+- MySQL database
+- Docker Compose
+
+## Setup
+
+1. Clone repository
+2. Configure environment variables
+3. Run `docker-compose up`

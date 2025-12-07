@@ -1,0 +1,510 @@
+/* Responsive Mobile-First Stylesheet */
+
+/* ============================================
+   MOBILE FIRST BREAKPOINTS
+   ============================================
+   Mobile:     < 576px (default)
+   Tablet:     576px - 768px
+   Desktop:    768px - 992px
+   Large:      > 992px
+*/
+
+/* ============================================
+   NAVBAR RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 991px) {
+    .navbar-nav {
+        text-align: center;
+        padding-top: 1rem;
+    }
+    
+    .navbar-nav .nav-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+    
+    .navbar-brand .small {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem;
+    }
+    
+    .navbar-toggler {
+        padding: 0.25rem 0.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   HOME SCREEN RESPONSIVE
+   ============================================ */
+@media (max-width: 991px) {
+    .home-container .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .home-container .btn {
+        flex: 1 1 auto;
+        min-width: calc(50% - 0.5rem);
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-container .btn-group {
+        flex-direction: column;
+    }
+    
+    .home-container .btn {
+        width: 100%;
+        margin-right: 0 !important;
+    }
+    
+    .home-stats .col-md-3 {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .home-header {
+        text-align: center;
+    }
+    
+    .home-header .col-md-6:last-child {
+        text-align: center;
+        margin-top: 1rem;
+    }
+    
+    .home-stats .display-6 {
+        font-size: 1.25rem;
+    }
+    
+    .suggestion-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* ============================================
+   CARDS RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .card-img-top {
+        height: auto !important;
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .card-title {
+        font-size: 1rem;
+    }
+    
+    .card-text {
+        font-size: 0.875rem;
+    }
+}
+
+/* ============================================
+   BUTTONS RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .btn-group .btn {
+        flex: 1 1 auto;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn i {
+        margin-right: 0.25rem;
+    }
+}
+
+/* ============================================
+   FORMS RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 768px) {
+    .form-control,
+    .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .input-group {
+        flex-wrap: wrap;
+    }
+    
+    .input-group .form-control {
+        flex: 1 1 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-control,
+    .form-select {
+        padding: 0.75rem;
+        font-size: 16px;
+    }
+    
+    .input-group-text {
+        padding: 0.75rem;
+    }
+}
+
+/* ============================================
+   SEARCH SCREEN RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .search-form {
+        padding: 1rem;
+    }
+    
+    .search-results .col-lg-3,
+    .search-results .col-md-4 {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .search-container {
+        padding-top: 1rem;
+    }
+    
+    .search-form {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .search-results .col-sm-6 {
+        margin-bottom: 1rem;
+    }
+}
+
+/* ============================================
+   COLLECTION/WANTLIST RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .collection-grid .col-lg-3,
+    .collection-grid .col-md-4 {
+        margin-bottom: 1rem;
+    }
+    
+    .collection-filters {
+        flex-direction: column;
+    }
+    
+    .collection-filters > * {
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .collection-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .collection-header .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .collection-filters {
+        flex-direction: column;
+    }
+    
+    .collection-filters select,
+    .collection-filters input {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ============================================
+   PROFILE SCREEN RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .profile-header {
+        text-align: center;
+    }
+    
+    .profile-stats .col-md-3 {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .profile-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .profile-stats .display-6 {
+        font-size: 1.25rem;
+    }
+}
+
+/* ============================================
+   RATING SCREEN RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .rating-card {
+        margin-bottom: 1rem;
+    }
+    
+    .rating-controls {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 576px) {
+    .rating-item {
+        padding: 1rem;
+    }
+    
+    .rating-stars {
+        justify-content: center;
+    }
+}
+
+/* ============================================
+   MODAL RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-content {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 0.75rem;
+    }
+    
+    .modal-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* ============================================
+   TABLES RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 768px) {
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .table {
+        font-size: 0.75rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem;
+    }
+}
+
+/* ============================================
+   IMAGES RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 768px) {
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .card-img-top {
+        height: auto;
+        max-height: 300px;
+        object-fit: cover;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-img-top {
+        max-height: 200px;
+    }
+}
+
+/* ============================================
+   FOOTER RESPONSIVE FIXES
+   ============================================ */
+@media (max-width: 768px) {
+    footer {
+        padding: 1.5rem 0;
+    }
+    
+    footer .row {
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    footer {
+        padding: 1rem 0;
+    }
+    
+    footer p {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ============================================
+   ADMIN DASHBOARD RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .admin-stats .col-md-3 {
+        margin-bottom: 1rem;
+    }
+    
+    .admin-table {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .admin-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .admin-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .admin-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+@media (max-width: 576px) {
+    .d-mobile-none {
+        display: none !important;
+    }
+    
+    .d-mobile-block {
+        display: block !important;
+    }
+    
+    .text-mobile-center {
+        text-align: center !important;
+    }
+    
+    .w-mobile-100 {
+        width: 100% !important;
+    }
+    
+    .p-mobile-sm {
+        padding: 0.5rem !important;
+    }
+    
+    .m-mobile-sm {
+        margin: 0.5rem !important;
+    }
+}
+
+/* ============================================
+   SMOOTH SCROLLING
+   ============================================ */
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+    .navbar,
+    .btn,
+    footer {
+        display: none;
+    }
+    
+    .card {
+        break-inside: avoid;
+    }
+}
+
