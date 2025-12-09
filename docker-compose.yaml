@@ -6,17 +6,17 @@ services:
     container_name: discogs-mysql
     command: ["mysqld", "--default-authentication-plugin=mysql_native_password"]
     environment:
-      - MYSQL_ROOT_PASSWORD=root_password_123
-      - MYSQL_DATABASE=Discogs
-      - MYSQL_USER=discogs_user
-      - MYSQL_PASSWORD=secure_password_123
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password_123}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-Discogs}
+      - MYSQL_USER=${MYSQL_USER:-discogs_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-secure_password_123}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     ports:
       - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot_password_123"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root_password_123}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -40,22 +40,22 @@ services:
       # Database Configuration
       # Always use docker service name 'db' in docker-compose
       # For non-docker deployments, override MY_SQL_DB_HOST environment variable
-      - MY_SQL_DB_HOST=db
-      - MY_SQL_DB_PORT=3306
-      - MY_SQL_DB_USER=discogs_user
-      - MY_SQL_DB_PASSWORD=secure_password_123
-      - MY_SQL_DB_DATABASE=Discogs
+      - MY_SQL_DB_HOST=${MY_SQL_DB_HOST:-db}
+      - MY_SQL_DB_PORT=${MY_SQL_DB_PORT:-3306}
+      - MY_SQL_DB_USER=${MY_SQL_DB_USER:-discogs_user}
+      - MY_SQL_DB_PASSWORD=${MY_SQL_DB_PASSWORD:-secure_password_123}
+      - MY_SQL_DB_DATABASE=${MY_SQL_DB_DATABASE:-Discogs}
       - MY_SQL_DB_CONNECTION_LIMIT=10
       # Server Configuration
       - PORT=3001
       - NODE_ENV=production
       # JWT Configuration
-      - JWT_SECRET=your-secret-key-change-in-production
-      - JWT_EXPIRES_IN=24h
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
       # Discogs API Configuration
-      - DISCOGS_TOKEN=sgSOwNnDMKJCOWpLLTdNccwHTAbGVrUZOXjLcqxl
-      - DISCOGS_CONSUMER_KEY=sMFDHJBsfkokMGJRlJgZ
-      - DISCOGS_CONSUMER_SECRET=utjDmIyHRAQwbQmcbMIjghnuMuWnkUBM
+      - DISCOGS_TOKEN=${DISCOGS_TOKEN}
+      - DISCOGS_CONSUMER_KEY=${DISCOGS_CONSUMER_KEY}
+      - DISCOGS_CONSUMER_SECRET=${DISCOGS_CONSUMER_SECRET}
       # OAuth callback - use localhost for EC2, service name for docker-compose
       - DISCOGS_OAUTH_CALLBACK_URL=${DISCOGS_OAUTH_CALLBACK_URL:-http://localhost:3001/api/users/discogs/oauth/callback}
       # Frontend URL - use localhost for EC2, service name for docker-compose
