@@ -1,104 +1,32 @@
 # Grailtopia - Application Overview
 
-Test it out: https://grail-topia.com
+<i>Test it out:</i> https://grail-topia.com
+<br /><br />
+<i>For a description of all application services and there configurations, view that <a href="https://github.com/phollenback/discogs-helper/blob/main/Services.md#services">here</a></i>
 
 Grailtopia is a production-grade, full-stack web application deployed on AWS EC2 and managed through a fully automated CI/CD pipeline using GitHub Actions. The system is containerized with Docker Compose and includes a React frontend, TypeScript/Express backend, and MySQL database running behind an Nginx reverse proxy with automatic HTTPS.
+<br /> <br /> 
+Grailtopia integrates directly with the Discogs API using OAuth 1.0, allowing secure user authentication and real-time access to their collection data. Through this integration, the application can pull accurate release information, metadata, and artwork straight from Discogs, keeping user libraries synchronized with their live Discogs accounts.
 
 ---
+# Grailtopia's next steps ... Grailmeter
 
-## Services
-
-### 1. Frontend (React 18 + Nginx)
-- Built with **React 18**, React Router, and React Hook Form.  
-- Uses the **Context API** and secure cookies for authentication state.  
-- Styled with a **custom CSS variable theme system** for consistency across devices.  
-- Served in production through **Nginx**, which also handles static asset delivery and routing.
-
----
-
-### 2. Backend API (Node.js + Express + TypeScript)
-- Fully typed backend using **TypeScript 5**.  
-- Layered architecture: controllers, services, DAOs, and models.  
-- REST API routes for authentication, collection management, Discogs integration, and internal services.  
-- Validates and sanitizes all incoming data; uses **parameterized SQL queries** for security.
+If your like me, I am in a mad dash to gather all of my personal data in an effort to create insight for my own life in a few key areas: Personal Finance, Health, and even hobby analytics that can be easily flipped into cool personal dashboards with meaningful data.
+<br /> <br />
+In the case of Grailtopia, I feel there is a real opportunity for replicating well known music tracking features that come out at the end of the year into the world of physical media. We all have heard of the two big players in the arena -- Spotify Wrapped and Apple Replay. With the groundwork already established with my discogs-helper API, I think this project can easily evolve into unique system for tracking cinyl playback from real turntables.
+<br /> <br />
+This is not meant to be a consumer product by any means, it is a personal, "set-and-forget" solution for capturing your own vinyl listening patterns. The early design provides a solid foundation for a model that can reliably track plays throughout the year and visualize that data in a meaningful way.
 
 ---
+### **Here are the basic components, as well as a diagrammed high-level overview:**
 
-### 3. Database (MySQL 8.0)
-- Normalized relational schema including:
-  - Users  
-  - Collections  
-  - Records  
-  - Follows  
-  - Discogs OAuth tokens  
-- Indexed for fast queries and relational consistency.
+### **Client (Browser)**  
+Where users view their vinyl activity and insights.
 
----
+### **Vinyl Player**  
+The turntable being tracked during playback.
 
-### 4. Reverse Proxy & HTTPS (Nginx + Let's Encrypt)
-- Nginx routes all traffic to frontend and backend services.  
-- Handles **SSL termination** and automatically renews **Let's Encrypt certificates**.  
-- Provides reliable routing, caching, and production stability.
-
----
-
-## Authentication & Authorization
-
-### JWT Authentication
-- User sessions authenticated with **JSON Web Tokens**.  
-- JWTs include user identity and role information.  
-- Validated on every protected API route.  
-- Secure cookies used for session persistence on the frontend.
-
----
-
-## OAuth 1.0a (Discogs Integration)
-Grailtopia implements a complete OAuth 1.0a workflow to integrate with the Discogs API:
-
-1. Generate request tokens and sign all OAuth requests.  
-2. Redirect users to Discogs for authentication.  
-3. Exchange verifier for an access token.  
-4. Store tokens securely in MySQL.  
-5. Access Discogs endpoints for:
-   - Collection syncing  
-   - Wantlist syncing  
-   - Marketplace pricing  
-   - Release & artist metadata  
-
-This enables real-time vinyl metadata, values, and user-specific collection data.
-
----
-
-## Infrastructure & CI/CD
-
-### Docker & Docker Compose
-All services run in containers:
-- Frontend (Nginx + React build)  
-- Backend API  
-- MySQL database  
-
-Docker Compose manages networking, environment variables, service dependencies, and health checks.
-
----
-
-### GitHub Actions CI/CD
-Every push to `main` triggers a full automated pipeline:
-
-1. Run **Jest unit and integration tests**.  
-2. Build Docker images for each service.  
-3. SSH into the EC2 host.  
-4. Pull updated images.  
-5. Restart Docker Compose stack.  
-6. Perform service health checks before confirming deployment.
-
-Deployments consistently complete in under two minutes.
-
----
-
-## Testing
-- Automated test suite powered by **Jest + ts-jest**.  
-- Includes:
-  - Unit tests  
-  - API integration tests  
-  - Database operation tests  
-- CI pipeline blocks deployment on any failing tests.
+### **Raspberry Pi + Camera**  
+Captures record activity and sends that information to the system.
+<br />
+<img width="1329" height="705" alt="Screenshot 2025-12-07 at 3 12 39 PM" src="https://github.com/user-attachments/assets/567f9b90-cd39-437a-92d7-ce7e9c895a2f" />
