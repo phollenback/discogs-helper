@@ -21,12 +21,15 @@ This is not meant to be a consumer product by any means, it is a personal, "set-
 ### **Here are the basic components, as well as a diagrammed high-level overview:**
 
 ### **Client (Browser)**  
-Where users view their vinyl activity and insights.
+The user-facing interface where individuals can view vinyl playback history, session data, and derived insights, as well as interact with the system for configuration and manual input.
 
 ### **Vinyl Player**  
-The turntable being tracked during playback.
+The physical turntable being tracked during playback, acting as the source of playback activity by producing detectable signals (such as power state changes or platter motion) that indicate when a listening session has started or stopped.
 
 ### **Raspberry Pi + Camera**  
-Captures record activity and sends that information to the system.
+An edge device responsible for monitoring the turntable environment, capturing visual data of the spinning record, and processing or transmitting that data to identify the record and report playback events to the backend system.
 <br />
 <img width="1329" height="705" alt="Screenshot 2025-12-07 at 3 12 39 PM" src="https://github.com/user-attachments/assets/567f9b90-cd39-437a-92d7-ce7e9c895a2f" />
+<br />
+
+<img width="1300" height="589" alt="Screenshot 2026-04-01 at 6 15 34 PM" src="https://github.com/user-attachments/assets/95e86788-aa63-4235-b9f9-fd59f82918a0" />
