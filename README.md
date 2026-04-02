@@ -11,11 +11,9 @@ Grailtopia integrates directly with the Discogs API using OAuth 1.0, allowing se
 ---
 # Grailtopia's next steps ... Grailmeter
 
-If your like me, I am in a mad dash to gather all of my personal data in an effort to create insight for my own life in a few key areas: Personal Finance, Health, and even hobby analytics that can be easily flipped into cool personal dashboards with meaningful data.
-<br /> <br />
-In the case of Grailtopia, I feel there is a real opportunity for replicating well known music tracking features that come out at the end of the year into the world of physical media. We all have heard of the two big players in the arena -- Spotify Wrapped and Apple Replay. With the groundwork already established with my discogs-helper API, I think this project can easily evolve into unique system for tracking cinyl playback from real turntables.
-<br /> <br />
-This is not meant to be a consumer product by any means, it is a personal, "set-and-forget" solution for capturing your own vinyl listening patterns. The early design provides a solid foundation for a model that can reliably track plays throughout the year and visualize that data in a meaningful way.
+With Grailtopia, the goal is to bring end-of-year music insights (like Spotify Wrapped and Apple Replay) into the world of physical media. Building on the Discogs integration, this project aims to track real vinyl playback directly from your turntable.
+
+It’s designed as a set-and-forget system that captures listening habits over time and turns them into meaningful visual insights.
 
 ---
 ### **Here are the basic components, as well as a diagrammed high-level overview:**
