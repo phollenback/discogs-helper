@@ -1,95 +1,114 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi } from '../../utility/backSource';
+import { useAuthContext } from '../../AuthContext';
+import { useMeter } from '../../context/MeterContext';
+import PageHeader from '../All/PageHeader';
 import VinylSpinner from '../All/VinylSpinner';
 import '../../styles/theme.css';
 
+const PI_STREAM_URL = process.env.REACT_APP_PI_STREAM_URL || '';
+
 const MeterScreen = () => {
-    const { getData } = useApi();
-    
-    const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
-    const [recentlyPlayed, setRecentlyPlayed] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [sortBy, setSortBy] = useState('recent'); // 'recent', 'play_count', 'total_time'
-    const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
+    const { getData, postData } = useApi();
+    const { authState } = useAuthContext();
+    const {
+        nowPlaying: currentlyPlaying,
+        sessions: recentlyPlayed,
+        loading,
+        error,
+        pendingId,
+        refresh: loadMeterData,
+        formatTimeAgo,
+        formatDurationMinutes,
+    } = useMeter();
 
-    const loadMeterData = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            // Fetch mock meter data (same for all users)
-            const meterData = await getData('/api/meter/mock-data');
-            
-            console.log('[MeterScreen] Received meter data:', meterData);
-            if (meterData?.currentlyPlaying) {
-                console.log('[MeterScreen] Currently playing image URLs:', {
-                    cover_image_url: meterData.currentlyPlaying.cover_image_url,
-                    thumb_url: meterData.currentlyPlaying.thumb_url
-                });
-            }
-            
-            if (!meterData) {
-                setCurrentlyPlaying(null);
-                setRecentlyPlayed([]);
-                setLoading(false);
-                return;
-            }
-
-            // Set currently playing and recently played from mock data
-            setCurrentlyPlaying(meterData.currentlyPlaying || null);
-            setRecentlyPlayed(meterData.recentlyPlayed || []);
-        } catch (err) {
-            console.error('[MeterScreen] Error loading meter data:', err);
-            setError('Failed to load playback data');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const [sortBy, setSortBy] = useState('recent');
+    const [sortOrder, setSortOrder] = useState('desc');
+    const [searchTab, setSearchTab] = useState('collection');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [confirming, setConfirming] = useState(false);
+    const [localError, setLocalError] = useState(null);
 
     useEffect(() => {
-        loadMeterData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Load once on mount, no dependencies needed for mock data
-
-    const formatDuration = (minutes) => {
-        if (!minutes) return '0 min';
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        if (hours > 0) {
-            return `${hours}h ${mins}m`;
+        if (currentlyPlaying?.ocr_keywords?.length) {
+            setSearchQuery(currentlyPlaying.ocr_keywords.join(' '));
         }
-        return `${mins}m`;
+    }, [currentlyPlaying?.ocr_keywords]);
+
+    const runSearch = async () => {
+        setSearchLoading(true);
+        try {
+            const q = searchQuery.trim();
+            if (!q) { setSearchResults([]); return; }
+
+            if (searchTab === 'discogs') {
+                const data = await getData(`/api/discogs/database/search?q=${encodeURIComponent(q)}&type=release&per_page=15`);
+                setSearchResults((data?.results || []).map(r => ({
+                    discogs_id: r.id,
+                    title: r.title,
+                    artist: (r.artists || []).map(a => a.name || a).join(', '),
+                    thumb_url: r.thumb,
+                    catalog_number: r.catno
+                })));
+            } else if (searchTab === 'wantlist') {
+                const data = await getData(`/api/users/${authState.username}/wantlist`);
+                const items = Array.isArray(data) ? data : [];
+                const lower = q.toLowerCase();
+                setSearchResults(items.filter(i =>
+                    `${i.title} ${i.artist} ${i.catalog_number || ''}`.toLowerCase().includes(lower)
+                ).slice(0, 15).map(i => ({
+                    discogs_id: i.discogs_id,
+                    title: i.title,
+                    artist: i.artist,
+                    thumb_url: i.thumb_url,
+                    catalog_number: i.catalog_number
+                })));
+            } else {
+                const data = await getData(`/api/users/${authState.username}/collection`);
+                const items = Array.isArray(data) ? data : [];
+                const lower = q.toLowerCase();
+                setSearchResults(items.filter(i =>
+                    `${i.title} ${i.artist} ${i.catalog_number || ''}`.toLowerCase().includes(lower)
+                ).slice(0, 15).map(i => ({
+                    discogs_id: i.discogs_id,
+                    title: i.title,
+                    artist: i.artist,
+                    thumb_url: i.thumb_url,
+                    catalog_number: i.catalog_number
+                })));
+            }
+        } catch (err) {
+            console.error('[MeterScreen] search failed', err);
+        } finally {
+            setSearchLoading(false);
+        }
     };
 
-    const formatTimeAgo = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins} min ago`;
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-        return date.toLocaleDateString();
+    const confirmRecord = async (discogsId) => {
+        setConfirming(true);
+        setLocalError(null);
+        try {
+            await postData('/api/grailmeter/confirm', { discogs_id: discogsId });
+            await loadMeterData();
+        } catch (err) {
+            console.error('[MeterScreen] confirm failed', err);
+            setLocalError('Failed to confirm record');
+        } finally {
+            setConfirming(false);
+        }
     };
 
     const calculateElapsedTime = (startTime) => {
         if (!startTime) return '0 min';
-        const start = new Date(startTime);
-        const now = new Date();
-        const diffMs = now - start;
-        const diffMins = Math.floor(diffMs / 60000);
-        return formatDuration(diffMins);
+        const diffMins = Math.floor((Date.now() - new Date(startTime).getTime()) / 60000);
+        return formatDurationMinutes(diffMins);
     };
 
     const sortedRecentlyPlayed = [...recentlyPlayed].sort((a, b) => {
         let comparison = 0;
-        
         switch (sortBy) {
             case 'recent':
                 comparison = new Date(b.last_played) - new Date(a.last_played);
@@ -103,245 +122,173 @@ const MeterScreen = () => {
             default:
                 comparison = 0;
         }
-        
         return sortOrder === 'asc' ? -comparison : comparison;
     });
 
+    const displayError = localError || error;
+
     if (loading) {
         return (
-            <div className="container py-5">
-                <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-                    <VinylSpinner label="Loading your listening history..." />
+            <section className="page">
+                <div className="page-empty">
+                    <VinylSpinner label="Loading Grailmeter..." />
                 </div>
-            </div>
+            </section>
         );
     }
 
-    if (error) {
+    if (displayError) {
         return (
-            <div className="container py-5">
-                <div className="grail-alert grail-alert--danger">
-                    <i className="fas fa-exclamation-triangle me-2"></i>
-                    {error}
-                    <button 
-                        onClick={loadMeterData} 
-                        className="grail-btn grail-btn--primary grail-btn--sm ms-3"
-                    >
-                        Try Again
+            <section className="page">
+                <div className="grail-alert grail-alert--danger d-flex align-items-center gap-3">
+                    <span>{displayError}</span>
+                    <button type="button" onClick={loadMeterData} className="btn btn--ghost btn-sm">
+                        Try again
                     </button>
                 </div>
-            </div>
+            </section>
         );
     }
 
     return (
-        <div className="container py-4">
-            <div className="mb-4" style={{ position: 'relative' }}>
-                <div style={{
-                    position: 'absolute',
-                    top: '-20px',
-                    right: '0',
-                    width: '120px',
-                    height: '120px',
-                    background: 'radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    filter: 'blur(20px)',
-                    zIndex: 0
-                }}></div>
-                <h1 className="grail-heading--h1 mb-2" style={{ position: 'relative', zIndex: 1 }}>
-                    <i className="fas fa-tachometer-alt me-2" style={{ color: 'var(--grail-accent)' }}></i>
-                    Grailmeter
-                </h1>
-                <p style={{ color: 'var(--grail-text-subtle)', position: 'relative', zIndex: 1, marginBottom: '1rem' }}>
-                    Track your vinyl listening history and habits
-                </p>
-                <div style={{ position: 'relative', zIndex: 1, marginTop: '1rem' }}>
-                    <p style={{ color: 'var(--grail-text-subtle)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                        Coming soon... Check out the design for this cloud/IoT solution{' '}
-                        <a 
-                            href="https://github.com/phollenback/Multi-Frontend-Discogs-Helper?tab=readme-ov-file#discogs-helper"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ 
-                                color: 'var(--grail-accent)',
-                                textDecoration: 'none',
-                                fontWeight: '600'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.textDecoration = 'underline';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.textDecoration = 'none';
-                            }}
-                        >
-                            here
-                            <i className="fas fa-external-link-alt ms-1" style={{ fontSize: '0.8rem' }}></i>
-                        </a>
-                    </p>
+        <section className="page">
+            <PageHeader
+                eyebrow="Hardware"
+                title="Grailmeter"
+                subtitle={`Live vinyl detection for ${authState.username || 'admin'}`}
+            />
+
+            {PI_STREAM_URL && (
+                <div className="mb-4">
+                    <h2 className="grail-heading--h2 mb-3">Turntable Camera</h2>
+                    <div className="grail-card p-2" style={{ background: 'var(--grail-surface)', border: '1px solid var(--grail-glass-border)' }}>
+                        <img
+                            src={PI_STREAM_URL}
+                            alt="Turntable camera"
+                            style={{ width: '100%', maxHeight: '360px', objectFit: 'contain', borderRadius: '8px' }}
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Currently Playing Section */}
-            <div className="mb-5" style={{ position: 'relative' }}>
-                <div style={{
-                    position: 'absolute',
-                    top: '-10px',
-                    left: '-10px',
-                    width: '80px',
-                    height: '80px',
-                    background: 'radial-gradient(circle, rgba(234, 88, 12, 0.1) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    filter: 'blur(15px)',
-                    zIndex: 0
-                }}></div>
-                <h2 className="grail-heading--h2 mb-3" style={{ position: 'relative', zIndex: 1 }}>
-                    <i className="fas fa-play-circle me-2" style={{ color: 'var(--grail-accent)' }}></i>
-                    Currently Playing
-                </h2>
-                
-                {currentlyPlaying ? (
-                    <div className="grail-card" style={{ 
-                        background: 'var(--grail-surface)',
-                        border: '1px solid var(--grail-glass-border)',
-                        borderRadius: 'var(--grail-radius-lg)',
-                        padding: '2rem',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '2rem',
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }}>
-                        {/* Accent gradient background */}
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: '4px',
-                            background: 'linear-gradient(90deg, var(--grail-primary) 0%, var(--grail-accent) 50%, var(--grail-primary) 100%)',
-                            zIndex: 1
-                        }}></div>
-                        
-                        {/* Large Vinyl Spinner */}
-                        <div style={{ 
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '1rem',
-                            position: 'relative',
-                            zIndex: 2
-                        }}>
-                            <div style={{ 
-                                position: 'relative',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
-                                <VinylSpinner size={200} label={null} />
-                                {/* Accent glow effect */}
-                                    <div style={{
-                                        position: 'absolute',
-                                    width: '200px',
-                                    height: '200px',
-                                        borderRadius: '50%',
-                                    background: 'radial-gradient(circle, rgba(234, 88, 12, 0.2) 0%, transparent 70%)',
-                                    filter: 'blur(20px)',
-                                    zIndex: -1,
-                                    animation: 'pulse 2s ease-in-out infinite'
-                                }}></div>
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ color: 'var(--grail-text-subtle)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Runtime</div>
-                                <div className="h4 mb-0" style={{ color: 'var(--grail-accent)' }}>
-                                    {calculateElapsedTime(currentlyPlaying.start_time)}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Record Details */}
-                        <div style={{ 
-                            width: '100%',
-                            maxWidth: '600px',
-                            textAlign: 'center'
-                        }}>
-                            <Link 
-                                to={`/release/${currentlyPlaying.discogs_id}`}
-                                style={{ textDecoration: 'none', color: 'inherit' }}
+            {pendingId && (
+                <div className="grail-alert mb-4" style={{ background: 'rgba(234, 88, 12, 0.15)', border: '1px solid var(--grail-accent)' }}>
+                    <h5 className="mb-2">Identify this record</h5>
+                    {currentlyPlaying?.ocr_keywords?.length > 0 && (
+                        <p style={{ fontSize: '0.9rem', color: 'var(--grail-text-subtle)' }}>
+                            OCR detected: <strong>{currentlyPlaying.ocr_keywords.join(', ')}</strong>
+                        </p>
+                    )}
+                    {currentlyPlaying?.confidence != null && (
+                        <p style={{ fontSize: '0.85rem' }}>Confidence: {Math.round(currentlyPlaying.confidence)}%</p>
+                    )}
+                    <div className="d-flex gap-2 mb-2 flex-wrap">
+                        {['collection', 'wantlist', 'discogs'].map(tab => (
+                            <button
+                                key={tab}
+                                type="button"
+                                className={`grail-btn grail-btn--sm ${searchTab === tab ? 'grail-btn--primary' : 'grail-btn--ghost'}`}
+                                onClick={() => setSearchTab(tab)}
                             >
-                                <h3 className="h4 mb-2" style={{ color: 'var(--grail-text)' }}>
-                                    {currentlyPlaying.title}
-                                </h3>
-                                <p style={{ color: 'var(--grail-text-subtle)', marginBottom: '1rem' }}>{currentlyPlaying.artist}</p>
-                            </Link>
-                            
-                            <div className="row g-3 mt-3">
-                                <div className="col-6 col-md-3">
-                                    <div style={{ color: 'var(--grail-text-subtle)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Release Year</div>
-                                    <div style={{ color: 'var(--grail-text)' }}>{currentlyPlaying.release_year || 'N/A'}</div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div style={{ color: 'var(--grail-text-subtle)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Genre</div>
-                                    <div style={{ color: 'var(--grail-text)' }}>{currentlyPlaying.genre || 'N/A'}</div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div style={{ color: 'var(--grail-text-subtle)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Styles</div>
-                                    <div style={{ color: 'var(--grail-text)' }}>{currentlyPlaying.styles || 'N/A'}</div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                    <div style={{ color: 'var(--grail-text-subtle)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Started</div>
-                                    <div style={{ color: 'var(--grail-text)' }}>{formatTimeAgo(currentlyPlaying.start_time)}</div>
-                                </div>
+                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="d-flex gap-2 mb-3">
+                        <input
+                            className="form-control"
+                            style={{ background: 'var(--grail-surface)', color: 'var(--grail-text)', border: '1px solid var(--grail-glass-border)' }}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search by title, artist, catalog #..."
+                        />
+                        <button type="button" className="grail-btn grail-btn--primary" onClick={runSearch} disabled={searchLoading}>
+                            {searchLoading ? '...' : 'Search'}
+                        </button>
+                    </div>
+                    {currentlyPlaying?.candidates?.length > 0 && (
+                        <div className="mb-3">
+                            <div style={{ fontSize: '0.85rem', color: 'var(--grail-text-subtle)', marginBottom: '0.5rem' }}>Suggested matches</div>
+                            {currentlyPlaying.candidates.map(c => (
+                                <button
+                                    key={c.discogs_id}
+                                    type="button"
+                                    className="grail-btn grail-btn--ghost grail-btn--sm me-2 mb-2"
+                                    disabled={confirming}
+                                    onClick={() => confirmRecord(c.discogs_id)}
+                                >
+                                    {c.artist} — {c.title} ({Math.round(c.confidence)}%)
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {searchResults.map(r => (
+                        <button
+                            key={r.discogs_id}
+                            type="button"
+                            className="d-block w-100 text-start grail-btn grail-btn--ghost mb-2"
+                            disabled={confirming}
+                            onClick={() => confirmRecord(r.discogs_id)}
+                        >
+                            {r.artist} — {r.title} {r.catalog_number ? `(${r.catalog_number})` : ''}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            <div className="mb-5">
+                <h2 className="grail-heading--h2 mb-3">Currently Playing</h2>
+
+                {currentlyPlaying && currentlyPlaying.status !== 'idle' ? (
+                    <div className="grail-card p-4">
+                        <div className="d-flex flex-column flex-md-row gap-4 align-items-center">
+                            <VinylSpinner size={160} label={null} />
+                            <div className="flex-grow-1 text-center text-md-start">
+                                {currentlyPlaying.confidence != null && (
+                                    <span className="badge mb-2" style={{ background: currentlyPlaying.confidence >= 80 ? 'var(--grail-accent)' : '#f59e0b' }}>
+                                        {Math.round(currentlyPlaying.confidence)}% match
+                                    </span>
+                                )}
+                                <Link to={`/release/${currentlyPlaying.discogs_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    <h3 className="h4 mb-1">{currentlyPlaying.title}</h3>
+                                    <p style={{ color: 'var(--grail-text-subtle)' }}>{currentlyPlaying.artist}</p>
+                                </Link>
+                                <p style={{ color: 'var(--grail-accent)' }}>Runtime: {calculateElapsedTime(currentlyPlaying.start_time)}</p>
+                                {currentlyPlaying.catalog_number && (
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--grail-text-subtle)' }}>Cat# {currentlyPlaying.catalog_number}</p>
+                                )}
                             </div>
+                            {currentlyPlaying.label_snapshot_url && (
+                                <img
+                                    src={currentlyPlaying.label_snapshot_url}
+                                    alt="Label snapshot"
+                                    style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '50%' }}
+                                />
+                            )}
+                            {(currentlyPlaying.cover_image_url || currentlyPlaying.thumb_url) && (
+                                <img
+                                    src={currentlyPlaying.cover_image_url || currentlyPlaying.thumb_url}
+                                    alt="Cover"
+                                    style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '8px' }}
+                                />
+                            )}
                         </div>
                     </div>
                 ) : (
-                    <div className="grail-card" style={{ 
-                        background: 'var(--grail-surface)',
-                        border: '1px solid var(--grail-glass-border)',
-                        borderRadius: 'var(--grail-radius-lg)',
-                        padding: '3rem',
-                        textAlign: 'center'
-                    }}>
-                        <i className="fas fa-pause-circle" style={{ 
-                            fontSize: '4rem', 
-                            color: 'var(--grail-text-subtle)',
-                            marginBottom: '1rem'
-                        }}></i>
-                        <p style={{ color: 'var(--grail-text-subtle)', marginBottom: 0 }}>No record currently playing</p>
+                    <div className="grail-card p-5 text-center">
+                        <p style={{ color: 'var(--grail-text-subtle)' }}>No record currently playing</p>
                     </div>
                 )}
             </div>
 
-            {/* Recently Played Section */}
-            <div style={{ position: 'relative' }}>
-                <div style={{
-                    position: 'absolute',
-                    top: '-10px',
-                    right: '-10px',
-                    width: '100px',
-                    height: '100px',
-                    background: 'radial-gradient(circle, rgba(234, 88, 12, 0.08) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    filter: 'blur(15px)',
-                    zIndex: 0
-                }}></div>
-                <div className="d-flex justify-content-between align-items-center mb-3" style={{ position: 'relative', zIndex: 1 }}>
-                    <h2 className="grail-heading--h2 mb-0">
-                        <i className="fas fa-history me-2" style={{ color: 'var(--grail-accent)' }}></i>
-                        Recently Played
-                    </h2>
-                    
-                    {/* Sort Controls */}
-                    <div className="d-flex gap-2 align-items-center">
+            <div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h2 className="grail-heading--h2 mb-0">Playback History</h2>
+                    <div className="d-flex gap-2">
                         <select
                             className="form-select form-select-sm"
-                            style={{
-                                background: 'var(--grail-surface)',
-                                border: '1px solid var(--grail-glass-border)',
-                                color: 'var(--grail-text)',
-                                width: 'auto'
-                            }}
+                            style={{ background: 'var(--grail-surface)', border: '1px solid var(--grail-glass-border)', color: 'var(--grail-text)', width: 'auto' }}
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                         >
@@ -349,12 +296,8 @@ const MeterScreen = () => {
                             <option value="play_count">Play Count</option>
                             <option value="total_time">Total Time</option>
                         </select>
-                        <button
-                            className="grail-btn grail-btn--ghost grail-btn--sm"
-                            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                            title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
-                        >
-                            <i className={`fas fa-sort-${sortOrder === 'asc' ? 'amount-up' : 'amount-down'}`}></i>
+                        <button type="button" className="grail-btn grail-btn--ghost grail-btn--sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+                            {sortOrder === 'asc' ? '↑' : '↓'}
                         </button>
                     </div>
                 </div>
@@ -362,131 +305,14 @@ const MeterScreen = () => {
                 {sortedRecentlyPlayed.length > 0 ? (
                     <div className="row g-3">
                         {sortedRecentlyPlayed.map((record) => (
-                            <div key={record.discogs_id} className="col-12 col-md-6 col-lg-4">
-                                <Link 
-                                    to={`/release/${record.discogs_id}`}
-                                    style={{ textDecoration: 'none' }}
-                                >
-                                    <div className="grail-card" style={{
-                                        background: 'var(--grail-surface)',
-                                        border: '1px solid var(--grail-glass-border)',
-                                        borderRadius: 'var(--grail-radius-md)',
-                                        padding: '1rem',
-                                        height: '100%',
-                                        transition: 'all 0.2s ease',
-                                        cursor: 'pointer',
-                                        color: 'var(--grail-text)',
-                                        position: 'relative',
-                                        overflow: 'hidden'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.borderColor = 'var(--grail-accent)';
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = 'var(--grail-shadow-lg)';
-                                        // Add accent glow on hover
-                                        const glow = e.currentTarget.querySelector('.card-accent-glow');
-                                        if (glow) glow.style.opacity = '1';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.borderColor = 'var(--grail-glass-border)';
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = 'none';
-                                        const glow = e.currentTarget.querySelector('.card-accent-glow');
-                                        if (glow) glow.style.opacity = '0';
-                                    }}
-                                    >
-                                        {/* Accent glow on hover */}
-                                        <div className="card-accent-glow" style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            right: 0,
-                                            height: '3px',
-                                            background: 'linear-gradient(90deg, var(--grail-primary) 0%, var(--grail-accent) 50%, var(--grail-primary) 100%)',
-                                            opacity: 0,
-                                            transition: 'opacity 0.3s ease',
-                                            zIndex: 1
-                                        }}></div>
-                                        
-                                        <div className="d-flex gap-3" style={{ position: 'relative', zIndex: 2 }}>
-                                            {/* Vinyl sleeve effect - card background */}
-                                            <div style={{
-                                                        width: '80px',
-                                                        height: '80px',
-                                                        borderRadius: 'var(--grail-radius-sm)',
-                                                flexShrink: 0,
-                                                backgroundColor: 'var(--grail-surface-alt)',
-                                                border: '1px solid var(--grail-glass-border)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                position: 'relative',
-                                                overflow: 'hidden',
-                                                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
-                                            }}>
-                                                {/* Vinyl icon coming out of the sleeve */}
-                                                <i className="fas fa-compact-disc" style={{ 
-                                                    fontSize: '3rem',
-                                                    color: 'var(--grail-accent)',
-                                                    position: 'relative',
-                                                    zIndex: 2,
-                                                    transform: 'translateX(-15px)',
-                                                    filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3))'
-                                                }}></i>
-                                                {/* Sleeve edge effect */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    right: 0,
-                                                    top: 0,
-                                                    bottom: 0,
-                                                    width: '20px',
-                                                    background: 'linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.3) 100%)',
-                                                    zIndex: 1
-                                                }}></div>
-                                                {/* Accent highlight on sleeve */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    left: 0,
-                                                    top: 0,
-                                                    bottom: 0,
-                                                    width: '3px',
-                                                    background: 'linear-gradient(180deg, var(--grail-accent) 0%, transparent 100%)',
-                                                    zIndex: 3
-                                                }}></div>
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <h5 className="h6 mb-1" style={{ 
-                                                    color: 'var(--grail-text)',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    whiteSpace: 'nowrap'
-                                                }}>
-                                                    {record.title}
-                                                </h5>
-                                                <p style={{
-                                                    color: 'var(--grail-text-subtle)',
-                                                    fontSize: '0.85rem',
-                                                    marginBottom: '0.5rem',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    whiteSpace: 'nowrap'
-                                                }}>
-                                                    {record.artist}
-                                                </p>
-                                                <div className="d-flex gap-3" style={{ fontSize: '0.875rem', color: 'var(--grail-text-subtle)' }}>
-                                                    <div>
-                                                        <i className="fas fa-play me-1"></i>
-                                                        {record.play_count} {record.play_count === 1 ? 'play' : 'plays'}
-                                                    </div>
-                                                    <div>
-                                                        <i className="fas fa-clock me-1"></i>
-                                                        {formatDuration(record.total_time_minutes)}
-                                                    </div>
-                                                </div>
-                                                <div style={{ fontSize: '0.875rem', color: 'var(--grail-text-subtle)', marginTop: '0.25rem' }}>
-                                                    Last: {formatTimeAgo(record.last_played)}
-                                                </div>
-                                            </div>
+                            <div key={`${record.discogs_id}-${record.last_played}`} className="col-12 col-md-6 col-lg-4">
+                                <Link to={`/release/${record.discogs_id}`} style={{ textDecoration: 'none' }}>
+                                    <div className="grail-card p-3 h-100" style={{ color: 'var(--grail-text)' }}>
+                                        <h6 className="mb-1 text-truncate">{record.title}</h6>
+                                        <p className="small mb-2" style={{ color: 'var(--grail-text-subtle)' }}>{record.artist}</p>
+                                        <div className="small" style={{ color: 'var(--grail-text-subtle)' }}>
+                                            {formatDurationMinutes(record.total_time_minutes)}
+                                            {' · '}{formatTimeAgo(record.last_played)}
                                         </div>
                                     </div>
                                 </Link>
@@ -494,45 +320,13 @@ const MeterScreen = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="grail-card" style={{ 
-                        background: 'var(--grail-surface)',
-                        border: '1px solid var(--grail-glass-border)',
-                        borderRadius: 'var(--grail-radius-lg)',
-                        padding: '3rem',
-                        textAlign: 'center'
-                    }}>
-                        <i className="fas fa-music" style={{ 
-                            fontSize: '3rem', 
-                            color: 'var(--grail-text-subtle)',
-                            marginBottom: '1rem'
-                        }}></i>
-                        <p style={{ color: 'var(--grail-text-subtle)', marginBottom: 0 }}>No playback history yet</p>
-                        <p style={{ color: 'var(--grail-text-subtle)', fontSize: '0.875rem', marginTop: '0.5rem' }}>Start playing records to see your listening history here</p>
+                    <div className="grail-card p-5 text-center">
+                        <p style={{ color: 'var(--grail-text-subtle)' }}>No playback history yet — spin a record on the turntable</p>
                     </div>
                 )}
             </div>
-        </div>
+        </section>
     );
 };
 
 export default MeterScreen;
-
-// Add pulse animation for accent glow
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes pulse {
-        0%, 100% {
-            opacity: 0.3;
-            transform: scale(1);
-        }
-        50% {
-            opacity: 0.5;
-            transform: scale(1.05);
-        }
-    }
-`;
-if (!document.head.querySelector('style[data-meter-pulse]')) {
-    style.setAttribute('data-meter-pulse', 'true');
-    document.head.appendChild(style);
-}
-

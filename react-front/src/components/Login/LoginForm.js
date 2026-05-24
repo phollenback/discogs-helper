@@ -34,7 +34,7 @@ const LoginForm = () => {
     useEffect(() => {
         if (isAuthenticated) {
             console.log('User authenticated, navigating to /home');
-            navigate('/home');
+            navigate('/now');
         }
     }, [isAuthenticated, navigate]);
 
@@ -50,8 +50,8 @@ const LoginForm = () => {
     };
 
     return (
-        <div className="form-container">
-            <form onSubmit={handleSubmit(submitForm)} className="login-form">
+        <div className="auth-page">
+            <form onSubmit={handleSubmit(submitForm)} className="auth-card login-form">
                 <div className="img">
                     <img src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Discogs_logo_black.svg/220px-Discogs_logo_black.svg.png' alt='Discogs Logo' />
                 </div>

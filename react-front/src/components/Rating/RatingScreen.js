@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import PageHeader from '../All/PageHeader';
+import VinylSpinner from '../All/VinylSpinner';
 import { useAuthContext } from '../../AuthContext';
 import { useApi } from '../../utility/backSource';
 
@@ -377,12 +379,7 @@ const RatingScreen = () => {
                     key={i}
                     className={`star ${i <= currentRating ? 'filled' : ''}`}
                     onClick={() => handleRatingChange(discogsId, i)}
-                    style={{
-                        cursor: 'pointer',
-                        fontSize: '1.5em',
-                        color: i <= currentRating ? '#ffc107' : '#e4e5e9',
-                        marginRight: '2px'
-                    }}
+                    style={{ cursor: 'pointer' }}
                 >
                     ★
                 </span>
@@ -409,24 +406,19 @@ const RatingScreen = () => {
 
     if (loading) {
         return (
-            <div className="container mt-4">
-                <div className="text-center">
-                    <div className="spinner-border" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p>Loading your collection...</p>
+            <section className="page">
+                <div className="page-empty">
+                    <VinylSpinner label="Loading your collection…" />
                 </div>
-            </div>
+            </section>
         );
     }
 
     if (error) {
         return (
-            <div className="container mt-4">
-                <div className="alert alert-danger" role="alert">
-                    {error}
-                </div>
-            </div>
+            <section className="page">
+                <div className="grail-alert grail-alert--warning">{error}</div>
+            </section>
         );
     }
 
@@ -434,332 +426,119 @@ const RatingScreen = () => {
     const filteredData = getFilteredAndSortedData();
 
     return (
-        <div className="container mt-4">
-            <div className="row">
-                <div className="col-12">
-                    <h1 className="mb-4">
-                        <i className="fas fa-star me-2"></i>
-                        Rate Your Items
-                    </h1>
-                    
-                    {/* Tab Navigation */}
-                    <ul className="nav nav-tabs mb-4" id="ratingTabs" role="tablist">
-                        <li className="nav-item" role="presentation">
-                            <button 
-                                className={`nav-link ${activeTab === 'collection' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('collection')}
-                                type="button"
-                            >
-                                <i className="fas fa-music me-2"></i>
-                                Collection ({collection.length})
-                            </button>
-                        </li>
-                        <li className="nav-item" role="presentation">
-                            <button 
-                                className={`nav-link ${activeTab === 'wantlist' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('wantlist')}
-                                type="button"
-                            >
-                                <i className="fas fa-heart me-2"></i>
-                                Wantlist ({wantlist.length})
-                            </button>
-                        </li>
-                    </ul>
-                    {/* Statistics */}
-                    <div className="row mb-4">
-                        <div className="col-md-3">
-                            <div className="card bg-primary text-white">
-                                <div className="card-body text-center">
-                                    <h5 className="card-title">Total Items</h5>
-                                    <h3>{stats.total}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-3">
-                            <div className="card bg-success text-white">
-                                <div className="card-body text-center">
-                                    <h5 className="card-title">Rated</h5>
-                                    <h3>{stats.rated}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-3">
-                            <div className="card bg-warning text-white">
-                                <div className="card-body text-center">
-                                    <h5 className="card-title">Unrated</h5>
-                                    <h3>{stats.unrated}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-3">
-                            <div className="card bg-info text-white">
-                                <div className="card-body text-center">
-                                    <h5 className="card-title">Avg Rating</h5>
-                                    <h3>{stats.avgRating}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <section className="page">
+            <PageHeader
+                eyebrow="Library"
+                title="Rate your items"
+                subtitle="Score releases in your collection or wantlist."
+            />
 
-                    {/* Top 5 Management */}
-                    <div className="row mb-4">
-                        <div className="col-12">
-                            <div className="card">
-                                <div className="card-body">
-                                    <h5 className="card-title mb-3">
-                                        <i className="fas fa-trophy me-2" style={{color: '#ffc107'}}></i>
-                                        Top 5 {activeTab === 'collection' ? 'Collection' : 'Wantlist'} Items
-                                    </h5>
-                                    <div className="row">
-                                        {[1, 2, 3, 4, 5].map((position) => {
-                                            const top5 = getTop5();
-                                            const item = top5[position - 1];
-                                            const currentData = activeTab === 'collection' ? collection : wantlist;
-                                            
-                                            return (
-                                                <div key={position} className="col-md-12 mb-3">
-                                                    <div className="d-flex align-items-center">
-                                                        <div style={{
-                                                            width: '40px',
-                                                            height: '40px',
-                                                            borderRadius: '50%',
-                                                            background: position === 1 ? '#ffd700' : position === 2 ? '#c0c0c0' : position === 3 ? '#cd7f32' : '#6c757d',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            fontWeight: 'bold',
-                                                            color: 'white',
-                                                            marginRight: '15px',
-                                                            fontSize: '1.2em'
-                                                        }}>
-                                                            {position}
-                                                        </div>
-                                                        <div style={{flex: 1}}>
-                                                            <select
-                                                                className="form-select"
-                                                                value={item ? item.discogs_id : ''}
-                                                                onChange={(e) => handleTop5Change(position, e.target.value)}
-                                                            >
-                                                                <option value="">Select an item...</option>
-                                                                {currentData
-                                                                    .sort((a, b) => {
-                                                                        const aTitle = a.title?.toLowerCase() || '';
-                                                                        const bTitle = b.title?.toLowerCase() || '';
-                                                                        return aTitle.localeCompare(bTitle);
-                                                                    })
-                                                                    .map((dataItem) => (
-                                                                        <option key={dataItem.discogs_id} value={dataItem.discogs_id}>
-                                                                            {dataItem.title} - {dataItem.artist}
-                                                                            {dataItem.ranking !== null && dataItem.ranking !== position ? ` (Currently #${dataItem.ranking})` : ''}
-                                                                        </option>
-                                                                    ))}
-                                                            </select>
-                                                        </div>
-                                                        {item && (
-                                                            <div style={{marginLeft: '15px', display: 'flex', alignItems: 'center'}}>
-                                                                <Link to={`/release/${item.discogs_id}`}>
-                                                                    <img 
-                                                                        src={item.thumb_url || item.cover_image_url || 'https://via.placeholder.com/50x50/cccccc/666666?text=No+Image'}
-                                                                        alt={item.title}
-                                                                        style={{
-                                                                            width: '50px',
-                                                                            height: '50px',
-                                                                            objectFit: 'cover',
-                                                                            borderRadius: '4px'
-                                                                        }}
-                                                                        onError={(e) => {
-                                                                            e.target.src = 'https://via.placeholder.com/50x50/cccccc/666666?text=No+Image';
-                                                                        }}
-                                                                    />
-                                                                </Link>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div className="page-tabs">
+                <button
+                    type="button"
+                    className={`page-tabs__btn${activeTab === 'collection' ? ' is-active' : ''}`}
+                    onClick={() => setActiveTab('collection')}
+                >
+                    Collection ({collection.length})
+                </button>
+                <button
+                    type="button"
+                    className={`page-tabs__btn${activeTab === 'wantlist' ? ' is-active' : ''}`}
+                    onClick={() => setActiveTab('wantlist')}
+                >
+                    Wantlist ({wantlist.length})
+                </button>
+            </div>
 
-                    {/* Filters and Sorting */}
-                    <div className="row mb-3">
-                        <div className="col-md-6">
-                            <label htmlFor="ratingFilter" className="form-label">Filter by Rating:</label>
-                            <select 
-                                className="form-select" 
-                                id="ratingFilter"
-                                value={ratingFilter}
-                                onChange={(e) => setRatingFilter(e.target.value)}
-                            >
-                                <option value="all">All Items</option>
-                                <option value="rated">Rated Items</option>
-                                <option value="unrated">Unrated Items</option>
-                            </select>
-                        </div>
-                        <div className="col-md-3">
-                            <label htmlFor="sortBy" className="form-label">Sort by:</label>
-                            <select 
-                                className="form-select" 
-                                id="sortBy"
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                            >
-                                <option value="title">Title</option>
-                                <option value="artist">Artist</option>
-                                <option value="rating">Rating</option>
-                                <option value="ranking">Ranking</option>
-                                <option value="date_added">Date Added</option>
-                            </select>
-                        </div>
-                        <div className="col-md-3">
-                            <label htmlFor="sortOrder" className="form-label">Order:</label>
-                            <select 
-                                className="form-select" 
-                                id="sortOrder"
-                                value={sortOrder}
-                                onChange={(e) => setSortOrder(e.target.value)}
-                            >
-                                <option value="asc">Ascending</option>
-                                <option value="desc">Descending</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Items */}
-                    <div className="row">
-                        {filteredData.length === 0 ? (
-                            <div className="col-12">
-                                <div className="alert alert-info" role="alert">
-                                    {ratingFilter === 'all' 
-                                        ? `No items in your ${activeTab} yet.` 
-                                        : `No ${ratingFilter} items found in your ${activeTab}.`
-                                    }
-                                </div>
-                            </div>
-                        ) : (
-                            filteredData.map((item) => (
-                                <div key={item.discogs_id} className="col-md-6 col-lg-4 mb-3">
-                                    <div className="card h-100" style={{position: 'relative'}}>
-                                        {/* Ranking Badge */}
-                                        {item.ranking !== null && item.ranking !== undefined && (
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: '10px',
-                                                left: '10px',
-                                                width: '30px',
-                                                height: '30px',
-                                                borderRadius: '50%',
-                                                background: item.ranking <= 3 ? (item.ranking === 1 ? '#ffd700' : item.ranking === 2 ? '#c0c0c0' : '#cd7f32') : '#6c757d',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontWeight: 'bold',
-                                                color: 'white',
-                                                fontSize: '0.9em',
-                                                zIndex: 10,
-                                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                            }}>
-                                                #{item.ranking}
-                                            </div>
-                                        )}
-                                        <div className="row g-0">
-                                            <div className="col-4">
-                                                <Link to={`/release/${item.discogs_id}`}>
-                                                    <img 
-                                                        src={(() => {
-                                                            const imgUrl = item.thumb_url || item.cover_image_url || 'https://via.placeholder.com/150x150/cccccc/666666?text=No+Image';
-                                                            console.log(`Image for ${item.title}: ${imgUrl}`);
-                                                            return imgUrl;
-                                                        })()}
-                                                        className="img-fluid rounded-start" 
-                                                        alt={item.title || 'Album cover'}
-                                                        style={{
-                                                            objectFit: 'cover', 
-                                                            minHeight: '120px',
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                        onError={(e) => {
-                                                            console.log(`Image failed to load for ${item.title}:`, e.target.src);
-                                                            e.target.src = 'https://via.placeholder.com/150x150/cccccc/666666?text=No+Image';
-                                                        }}
-                                                    />
-                                                </Link>
-                                            </div>
-                                            <div className="col-8">
-                                                <div className="card-body p-2">
-                                                    <h6 className="card-title mb-1" style={{fontSize: '0.9em'}}>
-                                                        <Link 
-                                                            to={`/release/${item.discogs_id}`}
-                                                            className="text-decoration-none text-dark"
-                                                            style={{fontSize: '0.9em'}}
-                                                        >
-                                                            {item.title}
-                                                        </Link>
-                                                    </h6>
-                                                    <p className="card-text mb-1" style={{fontSize: '0.8em', color: '#666'}}>
-                                                        {item.artist}
-                                                    </p>
-                                                    <p className="card-text mb-2" style={{fontSize: '0.7em', color: '#888'}}>
-                                                        {item.release_year}
-                                                    </p>
-                                                    
-                                                    {/* Rating Stars */}
-                                                    <div className="mb-2">
-                                                        <div style={{fontSize: '0.8em', marginBottom: '2px'}}>
-                                                            Your Rating:
-                                                        </div>
-                                                        {renderStars(item.rating || 0, item.discogs_id)}
-                                                    </div>
-
-                                                    {/* Ranking Input */}
-                                                    <div className="mb-2">
-                                                        <label style={{fontSize: '0.8em', marginBottom: '2px', display: 'block'}}>
-                                                            Ranking:
-                                                        </label>
-                                                        <select
-                                                            className="form-select form-select-sm"
-                                                            value={item.ranking !== null && item.ranking !== undefined ? item.ranking : ''}
-                                                            onChange={(e) => handleRankingChange(item.discogs_id, e.target.value ? parseInt(e.target.value) : null)}
-                                                            style={{fontSize: '0.8em'}}
-                                                        >
-                                                            <option value="">No ranking</option>
-                                                            {[...Array(100)].map((_, i) => (
-                                                                <option key={i + 1} value={i + 1}>
-                                                                    #{i + 1}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Current Rating Display */}
-                                                    <div className="d-flex justify-content-between align-items-center">
-                                                        {item.rating && item.rating > 0 && (
-                                                            <small className="text-muted">
-                                                                Rated: {item.rating}/5
-                                                            </small>
-                                                        )}
-                                                        {item.ranking !== null && item.ranking !== undefined && (
-                                                            <small className="text-muted">
-                                                                Rank: #{item.ranking}
-                                                            </small>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+            <div className="page-stat-row">
+                <div className="page-stat">
+                    <div className="page-stat__label">Total</div>
+                    <div className="page-stat__value">{stats.total}</div>
+                </div>
+                <div className="page-stat">
+                    <div className="page-stat__label">Rated</div>
+                    <div className="page-stat__value">{stats.rated}</div>
+                </div>
+                <div className="page-stat">
+                    <div className="page-stat__label">Unrated</div>
+                    <div className="page-stat__value">{stats.unrated}</div>
+                </div>
+                <div className="page-stat">
+                    <div className="page-stat__label">Average</div>
+                    <div className="page-stat__value">{stats.avgRating}</div>
                 </div>
             </div>
-        </div>
+
+            <div className="page-toolbar">
+                <select
+                    className="form-select form-select-sm"
+                    value={ratingFilter}
+                    onChange={(e) => setRatingFilter(e.target.value)}
+                    aria-label="Filter by rating"
+                >
+                    <option value="all">All items</option>
+                    <option value="rated">Rated</option>
+                    <option value="unrated">Unrated</option>
+                </select>
+                <select
+                    className="form-select form-select-sm"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    aria-label="Sort by"
+                >
+                    <option value="title">Title</option>
+                    <option value="artist">Artist</option>
+                    <option value="rating">Rating</option>
+                    <option value="ranking">Ranking</option>
+                    <option value="date_added">Date added</option>
+                </select>
+                <select
+                    className="form-select form-select-sm"
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    aria-label="Sort order"
+                >
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+            </div>
+
+            {filteredData.length === 0 ? (
+                <div className="page-empty">
+                    <p className="page-empty__title">No items yet</p>
+                    <p>
+                        {ratingFilter === 'all'
+                            ? `Nothing in your ${activeTab} to rate.`
+                            : `No ${ratingFilter} items in your ${activeTab}.`}
+                    </p>
+                </div>
+            ) : (
+                filteredData.map((item) => (
+                    <article key={item.discogs_id} className="rating-item">
+                        <Link to={`/release/${item.discogs_id}`}>
+                            <img
+                                className="rating-item__thumb"
+                                src={item.thumb_url || item.cover_image_url || 'https://via.placeholder.com/64x64/cccccc/666666?text=No+Image'}
+                                alt={item.title || 'Album cover'}
+                                onError={(e) => {
+                                    e.target.src = 'https://via.placeholder.com/64x64/cccccc/666666?text=No+Image';
+                                }}
+                            />
+                        </Link>
+                        <div>
+                            <h3 className="match-card__title" style={{ marginBottom: 4 }}>
+                                <Link to={`/release/${item.discogs_id}`}>{item.title}</Link>
+                            </h3>
+                            <p className="match-card__meta">{item.artist}{item.release_year ? ` · ${item.release_year}` : ''}</p>
+                            <div className="rating-item__stars">{renderStars(item.rating || 0, item.discogs_id)}</div>
+                        </div>
+                        {item.ranking != null && (
+                            <span className="pill pill--muted">#{item.ranking}</span>
+                        )}
+                    </article>
+                ))
+            )}
+        </section>
     );
 };
 

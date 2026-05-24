@@ -4,12 +4,15 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { AuthProvider } from './AuthContext';
+import { MeterProvider } from './context/MeterContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <App />
+      <MeterProvider>
+        <App />
+      </MeterProvider>
     </AuthProvider>
   </React.StrictMode>
 );

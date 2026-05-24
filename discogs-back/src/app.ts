@@ -34,6 +34,7 @@ import mastersRouter from './masters/master.routes'
 import labelsRouter from './labels/labels.routes'
 import artistsRouter from './artists/artists.routes'
 import entityFollowsRouter from './entity-follows/entity-follows.routes'
+import grailmeterRouter from './grailmeter/grailmeter.routes'
 import cors from 'cors'
 import helmet from 'helmet'
 import { checkDbConnection, initializeMySqlConnector } from './services/mysql.connector'
@@ -167,6 +168,7 @@ app.use('/', releasesRouter);
 app.use('/', mastersRouter);
 app.use('/', labelsRouter);
 app.use('/', entityFollowsRouter);
+app.use('/', grailmeterRouter);
 
 // open the server at the defined port
 app.listen(port, () => {

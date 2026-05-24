@@ -92,8 +92,8 @@ const RegisterScreen = () => {
     };
 
     return (
-        <div className="form-container">
-            <div className="register-form">
+        <div className="auth-page">
+            <div className="auth-card register-form">
                 {/* Step Indicator */}
                 <div className="step-indicator">
                     <div 

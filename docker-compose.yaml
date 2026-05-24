@@ -14,7 +14,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root_password_123}"]
       interval: 10s
@@ -62,6 +62,8 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:80}
       # CORS Configuration
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      # Raspberry Pi camera stream (set to http://<pi-ip>:8765/stream)
+      - PICAM_STREAM_URL=${PICAM_STREAM_URL:-}
       # Logging
       - LOG_LEVEL=info
     ports:

@@ -242,3 +242,29 @@ FROM users u, records r
 WHERE u.username = 'WillMerritt3' AND r.discogs_id = 1234567;
 
 -- Note: Discogs tokens are already set during user INSERT above
+
+-- Record track listings (populated on Discogs sync)
+CREATE TABLE IF NOT EXISTS record_tracks (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    record_id   INT NOT NULL,
+    position    VARCHAR(20) DEFAULT NULL,
+    title       VARCHAR(500) NOT NULL,
+    FOREIGN KEY (record_id) REFERENCES records(record_id) ON DELETE CASCADE,
+    INDEX idx_record_tracks_record (record_id)
+);
+
+-- Grailmeter play sessions
+CREATE TABLE IF NOT EXISTS play_sessions (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT NOT NULL,
+    discogs_id    INT DEFAULT NULL,
+    artist        VARCHAR(255) DEFAULT NULL,
+    title         VARCHAR(255) DEFAULT NULL,
+    spin_started_at DATETIME DEFAULT NULL,
+    spin_stopped_at DATETIME DEFAULT NULL,
+    duration_sec  INT DEFAULT 0,
+    status        ENUM('present', 'spinning', 'removed') NOT NULL DEFAULT 'present',
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_user_status (user_id, status)
+);

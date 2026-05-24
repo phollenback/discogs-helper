@@ -969,11 +969,13 @@ export const fetchUserCollectionOAuth = async (
     username: string,
     folderId: number,
     accessToken: string,
-    accessTokenSecret: string
+    accessTokenSecret: string,
+    page = 1,
+    perPage = 50
 ) => {
-    const url = `https://api.discogs.com/users/${username}/collection/folders/${folderId}/releases`;
+    const url = `https://api.discogs.com/users/${username}/collection/folders/${folderId}/releases?page=${page}&per_page=${perPage}`;
     try {
-        console.log(`[discogs.connector][fetchUserCollectionOAuth] Fetching collection for: ${username} (folder ${folderId})`);
+        console.log(`[discogs.connector][fetchUserCollectionOAuth] Fetching collection for: ${username} (folder ${folderId}, page ${page})`);
         const response = await makeOAuthRequest('GET', url, accessToken, accessTokenSecret);
         console.log(`[discogs.connector][fetchUserCollectionOAuth] Successfully fetched collection for: ${username}`);
         return response.data;

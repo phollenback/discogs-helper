@@ -23,6 +23,7 @@ export const initializeMySqlConnector = () => {
             user: dbUser,
             password: dbPassword,
             database: dbDatabase,
+            charset: 'utf8mb4',
             connectTimeout: 60000, // 60 seconds
             acquireTimeout: 60000, // 60 seconds
             timeout: 60000, // 60 seconds

@@ -4,6 +4,7 @@ import * as CollectionDao from '../collection/collection.dao';
 import * as UserDao from '../users/users.dao';
 import { CollectionItem } from '../collection/collection.model';
 import { ReleaseCollectionEntry, ReleaseRatingResponse } from './releases.model';
+import { execute } from '../services/mysql.connector';
 
 const RELEASE_NOT_FOUND_MESSAGE = 'Release not found';
 
@@ -34,7 +35,7 @@ export const normalizeCollectionEntry = (entry: any | null): ReleaseCollectionEn
 };
 
 /**
- * Ensure release data exists in the records table
+ * Ensure release data exists in the records table, including tracklist.
  */
 export const ensureRecordData = async (releaseId: number, releaseData: any): Promise<void> => {
     const artists = Array.isArray(releaseData.artists)
@@ -54,6 +55,29 @@ export const ensureRecordData = async (releaseId: number, releaseData: any): Pro
         thumbUrl: primaryImage?.uri150 || primaryImage?.uri || '',
         coverImageUrl: primaryImage?.uri || primaryImage?.resource_url || ''
     });
+
+    // Persist tracklist so Grailmeter can match OCR track titles against the user's collection.
+    const tracklist: { title?: string; position?: string }[] = Array.isArray(releaseData.tracklist)
+        ? releaseData.tracklist
+        : [];
+    if (tracklist.length === 0) return;
+
+    const rows = await execute<{ record_id: number }[]>(
+        'SELECT record_id FROM records WHERE discogs_id = ? LIMIT 1',
+        [releaseId]
+    );
+    const recordId = rows?.[0]?.record_id;
+    if (!recordId) return;
+
+    // Replace existing tracks atomically — cheap for typical 10–20 track albums.
+    await execute('DELETE FROM record_tracks WHERE record_id = ?', [recordId]);
+    for (const track of tracklist) {
+        if (!track.title) continue;
+        await execute(
+            'INSERT INTO record_tracks (record_id, position, title) VALUES (?, ?, ?)',
+            [recordId, track.position ?? null, track.title]
+        );
+    }
 };
 
 /**
@@ -186,6 +210,9 @@ export const getReleaseOverview = async (
     username?: string
 ) => {
     const release = await DiscogsConnector.getRelease(releaseId, options.currAbbr ? { curr_abbr: options.currAbbr } : {});
+
+    // Seed tracklist for Grailmeter matching — fire-and-forget, don't block the page load.
+    if (release) ensureRecordData(releaseId, release).catch(() => {});
 
     const [stats, communityRating] = await Promise.all([
         DiscogsConnector.getReleaseStats(releaseId),
