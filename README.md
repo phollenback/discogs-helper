@@ -1,6 +1,5 @@
 # Grailtopia - Application Overview
 
-<i>Try it out:</i> https://grail-topia.com  
 <br />
 --- 
 
